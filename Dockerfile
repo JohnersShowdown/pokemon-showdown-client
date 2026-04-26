@@ -26,9 +26,12 @@ ARG SERVER_REGISTERED=true
 # Bring in the rest of the source
 COPY . .
 
+# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
+RUN node build full
+
 # Generate a browser-compatible config/config.js with baked-in server values.
-# The config-example.js uses process.env which only works in Node, not browsers,
-# so we produce a static file here from the ARGs above.
+# This runs AFTER the main build so it cannot be overwritten.
+# The config-example.js uses process.env which only works in Node, not browsers.
 RUN SERVER_ID=$SERVER_ID \
     SERVER_HOST=$SERVER_HOST \
     SERVER_PORT=$SERVER_PORT \
@@ -37,14 +40,15 @@ RUN SERVER_ID=$SERVER_ID \
     SERVER_REGISTERED=$SERVER_REGISTERED \
     node build-tools/generate-config.js
 
-# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
-RUN node build full
-
 # ---------- Runtime stage ----------
 FROM nginx:1.27-alpine
 
 # Static doc root: the play subdomain, with testclient.html as index
 COPY --from=builder /app/play.pokemonshowdown.com/ /usr/share/nginx/html/
+
+# play.pokemonshowdown.com/config/config.js is a symlink in the source tree.
+# Explicitly overwrite it with the generated static file so nginx serves real JS.
+COPY --from=builder /app/config/config.js /usr/share/nginx/html/config/config.js
 
 # testclient.html references ../config/testclient-key.js (one level above doc
 # root). That file is optional (logged-in test sessions only) and intentionally
