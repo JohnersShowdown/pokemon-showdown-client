@@ -17,6 +17,7 @@ const port = parseInt(process.env.SERVER_PORT || '443');
 const httpport = parseInt(process.env.SERVER_HTTPPORT || '8000');
 const altport = parseInt(process.env.SERVER_ALTPORT || '80');
 const registered = process.env.SERVER_REGISTERED !== 'false';
+const testclientKey = process.env.TESTCLIENT_KEY || '';
 
 const root = path.resolve(__dirname, '..');
 const routesPath = path.join(root, 'config', 'routes.json');
@@ -64,5 +65,10 @@ fs.writeFileSync(path.join(root, 'config', 'config.js'), js);
 const playConfigDir = path.join(root, 'play.pokemonshowdown.com', 'config');
 fs.mkdirSync(playConfigDir, {recursive: true});
 fs.writeFileSync(path.join(playConfigDir, 'config.generated.js'), js);
+
+if (testclientKey) {
+	const keyJs = `const POKEMON_SHOWDOWN_TESTCLIENT_KEY = ${JSON.stringify(testclientKey)};\n`;
+	fs.writeFileSync(path.join(playConfigDir, 'testclient-key.js'), keyJs);
+}
 
 console.log(`[generate-config] Generated config.js → server: ${id}@${host}:${port}`);

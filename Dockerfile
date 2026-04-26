@@ -23,6 +23,7 @@ ARG SERVER_PORT=443
 ARG SERVER_HTTPPORT=8000
 ARG SERVER_ALTPORT=80
 ARG SERVER_REGISTERED=true
+ARG TESTCLIENT_KEY
 
 # build-tools/build-indexes expects GITHUB_TOKEN in process.env
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
@@ -39,6 +40,7 @@ RUN SERVER_ID=$SERVER_ID \
     SERVER_HTTPPORT=$SERVER_HTTPPORT \
     SERVER_ALTPORT=$SERVER_ALTPORT \
     SERVER_REGISTERED=$SERVER_REGISTERED \
+    TESTCLIENT_KEY=$TESTCLIENT_KEY \
     node build-tools/generate-config.js
 
 # Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
