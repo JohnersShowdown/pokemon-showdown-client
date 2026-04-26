@@ -51,10 +51,6 @@ FROM nginx:1.27-alpine
 # Static doc root: the play subdomain, with testclient.html as index
 COPY --from=builder /app/play.pokemonshowdown.com/ /usr/share/nginx/html/
 
-# play.pokemonshowdown.com/config/config.js is a symlink in the source tree.
-# Explicitly overwrite it with the generated static file so nginx serves real JS.
-COPY --from=builder /app/config/config.js /usr/share/nginx/html/config/config.js
-
 # testclient.html references ../config/testclient-key.js (one level above doc
 # root). That file is optional (logged-in test sessions only) and intentionally
 # 404s in production — no action needed.

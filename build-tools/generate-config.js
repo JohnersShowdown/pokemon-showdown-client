@@ -18,6 +18,10 @@ const httpport = parseInt(process.env.SERVER_HTTPPORT || '8000');
 const altport = parseInt(process.env.SERVER_ALTPORT || '80');
 const registered = process.env.SERVER_REGISTERED !== 'false';
 
+const root = path.resolve(__dirname, '..');
+const routesPath = path.join(root, 'config', 'routes.json');
+const routes = JSON.parse(fs.readFileSync(routesPath, 'utf8'));
+
 const js = `/** @type {import('../src/client-main').PSConfig} */
 var Config = Config || {};
 
@@ -38,15 +42,27 @@ Config.defaultserver = {
 	registered: ${registered}
 };
 
+Config.routes = {
+	root: ${JSON.stringify(routes.root)},
+	client: ${JSON.stringify(routes.client)},
+	dex: ${JSON.stringify(routes.dex)},
+	replays: ${JSON.stringify(routes.replays)},
+	users: ${JSON.stringify(routes.users)},
+	teams: ${JSON.stringify(routes.teams)},
+};
+
 Config.roomsFirstOpenScript = function () {
 };
 
 Config.customcolors = {};
 `;
 
-const root = path.resolve(__dirname, '..');
-
 // Write the root config (used by build tools)
 fs.writeFileSync(path.join(root, 'config', 'config.js'), js);
+
+// Write a non-symlinked browser config directly into the served client tree.
+const playConfigDir = path.join(root, 'play.pokemonshowdown.com', 'config');
+fs.mkdirSync(playConfigDir, {recursive: true});
+fs.writeFileSync(path.join(playConfigDir, 'config.generated.js'), js);
 
 console.log(`[generate-config] Generated config.js → server: ${id}@${host}:${port}`);
