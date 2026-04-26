@@ -135,6 +135,30 @@ function makeDexGetter(dex, kind) {
 	};
 }
 
+function getDexFormat(dex, name) {
+	if (dex.formats && typeof dex.formats.get === 'function') {
+		return dex.formats.get(name);
+	}
+	if (typeof dex.getFormat === 'function') {
+		return dex.getFormat(name);
+	}
+	return makeDexGetter(dex, 'formats').get(name);
+}
+
+function getDexRuleTable(dex, format) {
+	if (dex.formats && typeof dex.formats.getRuleTable === 'function') {
+		return dex.formats.getRuleTable(format);
+	}
+	if (typeof dex.getRuleTable === 'function') {
+		return dex.getRuleTable(format);
+	}
+	return {
+		has() { return false; },
+		isBanned() { return false; },
+		isBannedSpecies() { return false; },
+	};
+}
+
 function normalizeDexApi(dex) {
 	if (!dex || dex.__compatNormalized) return dex;
 
@@ -149,9 +173,6 @@ function normalizeDexApi(dex) {
 	}
 	if (!dex.abilities || typeof dex.abilities.get !== 'function') {
 		dex.abilities = makeDexGetter(dex, 'abilities');
-	}
-	if (!dex.formats || typeof dex.formats.get !== 'function') {
-		dex.formats = makeDexGetter(dex, 'formats');
 	}
 
 	if (typeof dex.mod === 'function' && !dex.mod.__compatWrapped) {
@@ -531,21 +552,21 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 					if (species.tier === 'CAP LC') tier = 'LC';
 					if (species.tier === 'CAP NFE') tier = 'NFE';
 					if (species.tier === 'CAP') tier = 'OU';
-					const format = Dex.formats.get(gen + 'metronomebattle');
+					const format = getDexFormat(Dex, gen + 'metronomebattle');
 					let bst = 0;
 					for (const stat of Object.values(species.baseStats)) {
 						bst += stat;
 					}
 					if (bst > 625) tier = 'Illegal';
-					if (Dex.formats.getRuleTable(format).isBannedSpecies(species)) tier = 'Illegal';
+					if (getDexRuleTable(Dex, format).isBannedSpecies(species)) tier = 'Illegal';
 					if (species.types.includes('Steel')) tier = 'Illegal';
 					return tier;
 				}
 				if (isNFE) {
 					let tier = species.tier;
 					if (!species.nfe) tier = 'Illegal';
-					const format = Dex.formats.get(gen + 'nfe');
-					const banlist = Dex.formats.getRuleTable(format);
+					const format = getDexFormat(Dex, gen + 'nfe');
+					const banlist = getDexRuleTable(Dex, format);
 					if (banlist.isBannedSpecies(species)) {
 						tier = 'Uber';
 					}
@@ -553,8 +574,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 				}
 				if (isLC) {
 					let tier = species.tier;
-					const lc = Dex.formats.get(gen + 'lc');
-					const lcBanlist = Dex.formats.getRuleTable(lc);
+					const lc = getDexFormat(Dex, gen + 'lc');
+					const lcBanlist = getDexRuleTable(Dex, lc);
 					const prevoSpecies = Dex.mod(gen).species.get(species.prevo);
 					if (!species.nfe || (prevoSpecies.exists && prevoSpecies.gen <= genNum) || lcBanlist.isBannedSpecies(species)) {
 						tier = 'Illegal';
@@ -642,9 +663,9 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 					'aaa', 'bh', 'doubles', // natdex abbreviations
 					'tiershift', 'linked', 'pokebilitiesaaa',
 				])) {
-					const format = Dex.formats.get(`${gen}${isNatDex ? 'nationaldex' : ''}${meta}`);
+					const format = getDexFormat(Dex, `${gen}${isNatDex ? 'nationaldex' : ''}${meta}`);
 					if (!format.exists) continue;
-					const ruleTable = Dex.formats.getRuleTable(format);
+					const ruleTable = getDexRuleTable(Dex, format);
 					let banned = ruleTable.isBannedSpecies(species);
 					if (!banned) {
 						const requiredItems = species.requiredItems;
@@ -674,8 +695,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 						metagameBans[meta][species.id] = 1;
 					}
 				}
-				const nd35Pokes = Dex.formats.get(gen + 'nationaldex35pokes');
-				if (nd35Pokes.exists && !Dex.formats.getRuleTable(nd35Pokes).isBannedSpecies(species)) {
+				const nd35Pokes = getDexFormat(Dex, gen + 'nationaldex35pokes');
+				if (nd35Pokes.exists && !getDexRuleTable(Dex, nd35Pokes).isBannedSpecies(species)) {
 					if (!metagameBans['nationaldex35pokes']) metagameBans['nationaldex35pokes'] = {};
 					metagameBans['nationaldex35pokes'][species.id] = 1;
 				}
@@ -871,7 +892,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 				}
 			}
 			if (isMetBattle) {
-				const banlist = Dex.formats.getRuleTable(Dex.formats.get(gen + 'metronomebattle'));
+				const banlist = getDexRuleTable(Dex, getDexFormat(Dex, gen + 'metronomebattle'));
 				if (banlist.isBanned('item:' + item.id)) continue;
 			}
 			switch (id) {
