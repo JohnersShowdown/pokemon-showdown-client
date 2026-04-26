@@ -22,7 +22,6 @@ caches
 Dockerfile
 .dockerignore
 docker-compose*.yml
-nginx/
 
 # Docs / non-runtime files
 README.md
