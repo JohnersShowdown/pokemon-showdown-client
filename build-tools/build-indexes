@@ -102,6 +102,9 @@ function localToID(text) {
 function getFromDataTable(dex, tableName, id) {
 	const table = dex.data && dex.data[tableName];
 	if (!table) return {};
+	if (Array.isArray(table)) {
+		return table.find(entry => localToID(entry && (entry.id || entry.name)) === id) || {};
+	}
 	return table[id] || {};
 }
 
@@ -123,6 +126,9 @@ function makeDexGetter(dex, kind) {
 			case 'abilities':
 				if (typeof dex.getAbility === 'function') return dex.getAbility(name);
 				return getFromDataTable(dex, 'Abilities', id);
+			case 'formats':
+				if (typeof dex.getFormat === 'function') return dex.getFormat(name);
+				return getFromDataTable(dex, 'Formats', id);
 			}
 			return {};
 		},
@@ -143,6 +149,9 @@ function normalizeDexApi(dex) {
 	}
 	if (!dex.abilities || typeof dex.abilities.get !== 'function') {
 		dex.abilities = makeDexGetter(dex, 'abilities');
+	}
+	if (!dex.formats || typeof dex.formats.get !== 'function') {
+		dex.formats = makeDexGetter(dex, 'formats');
 	}
 
 	if (typeof dex.mod === 'function' && !dex.mod.__compatWrapped) {
