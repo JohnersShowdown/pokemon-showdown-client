@@ -8,6 +8,11 @@ const child_process = require("child_process");
 const rootDir = path.resolve(__dirname, '..');
 process.chdir(rootDir);
 
+// Ensure caches directory exists
+if (!fs.existsSync('caches')) {
+	fs.mkdirSync('caches', { recursive: true });
+}
+
 if (!fs.existsSync('caches/pokemon-showdown')) {
 	const token = process.env.GITHUB_TOKEN;
 	if (!token) {
@@ -16,14 +21,13 @@ if (!fs.existsSync('caches/pokemon-showdown')) {
 	const repoUrl = `https://${token}@github.com/JohnersShowdown/johnpauls-showdown.git`;
 	child_process.execSync(`git clone ${repoUrl}`, {
 		cwd: 'caches',
-		stdio: 'inherit',
-		shell: '/bin/bash'
+		stdio: 'inherit'
 	});
 }
 
 process.stdout.write("Syncing data from Git repository... ");
-child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown', stdio: 'inherit', shell: '/bin/bash' });
-child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown', stdio: 'inherit', shell: '/bin/bash' });
+child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
+child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
 console.log("DONE");
 
 const Dex = require('../caches/pokemon-showdown/dist/sim/dex').Dex;
