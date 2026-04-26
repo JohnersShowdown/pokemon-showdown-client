@@ -5,8 +5,71 @@ const fs = require("fs");
 const path = require("path");
 process.chdir(path.resolve(__dirname, '../play.pokemonshowdown.com'));
 const imageSize = require('image-size');
+const SHOWDOWN_ROOT = path.resolve(__dirname, '../caches/pokemon-showdown');
 
-const Dex = require('./../caches/pokemon-showdown/dist/sim/dex').Dex;
+function findShowdownModulePath(modulePath) {
+	const directCandidates = [
+		path.join(SHOWDOWN_ROOT, 'dist', modulePath),
+		path.join(SHOWDOWN_ROOT, modulePath),
+		path.join(SHOWDOWN_ROOT, 'server', modulePath),
+		path.join(SHOWDOWN_ROOT, 'dist', 'server', modulePath),
+	];
+	for (const candidate of directCandidates) {
+		try {
+			require.resolve(candidate);
+			return candidate;
+		} catch {}
+	}
+
+	const fileName = `${path.basename(modulePath)}.js`;
+	const moduleDir = path.dirname(modulePath).replace(/\\/g, '/');
+	const stack = [SHOWDOWN_ROOT];
+	const matches = [];
+	while (stack.length) {
+		const cur = stack.pop();
+		for (const entry of fs.readdirSync(cur, {withFileTypes: true})) {
+			if (entry.isDirectory()) {
+				if (['.git', 'node_modules', 'test', 'tests'].includes(entry.name)) continue;
+				stack.push(path.join(cur, entry.name));
+				continue;
+			}
+			if (!entry.isFile() || entry.name !== fileName) continue;
+			const fullPath = path.join(cur, entry.name);
+			const relative = path.relative(SHOWDOWN_ROOT, fullPath).replace(/\\/g, '/');
+			if (relative.includes('/test/') || relative.startsWith('test/')) continue;
+
+			if (relative === `${modulePath}.js`) {
+				matches.push({score: 0, fullPath});
+				continue;
+			}
+			if (relative === `dist/${modulePath}.js` || relative === `server/${modulePath}.js` || relative === `dist/server/${modulePath}.js`) {
+				matches.push({score: 1, fullPath});
+				continue;
+			}
+			if (relative.endsWith(`/${modulePath}.js`)) {
+				matches.push({score: 2, fullPath});
+				continue;
+			}
+			if (relative.includes(`/${moduleDir}/`)) {
+				matches.push({score: 3, fullPath});
+				continue;
+			}
+			matches.push({score: 9, fullPath});
+		}
+	}
+
+	if (matches.length) {
+		matches.sort((a, b) => a.score - b.score || a.fullPath.length - b.fullPath.length);
+		return matches[0].fullPath;
+	}
+	throw new Error(`Unable to locate Showdown module file for ${modulePath}`);
+}
+
+function requireShowdownModule(modulePath) {
+	return require(findShowdownModulePath(modulePath));
+}
+
+const Dex = requireShowdownModule('sim/dex').Dex;
 const toID = Dex.toID;
 
 process.stdout.write("Updating animated sprite dimensions... ");
