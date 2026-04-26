@@ -1,0 +1,51 @@
+# VCS — keep build context small; version stamping falls back to package.json
+.git
+.gitignore
+.github
+
+# Editor / OS junk
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build caches
+caches
+
+# Docker artifacts (don't recurse into themselves)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+nginx/
+
+# Docs / non-runtime files
+README.md
+CONTRIBUTING.md
+CODEOWNERS
+COOLIFY.md
+LICENSE
+UPGRADING-SOCKJS.md
+WEB-API.md
+*.psd
+
+# PHP backend (we serve only the static client)
+composer.json
+composer.lock
+vendor/
+
+# Other site roots — only play.pokemonshowdown.com is shipped, but the
+# build-tools may reference them, so keep them in build context. (No exclude.)
+
+# Local secrets / keys that must never end up in an image
+config/testclient-key.js
+config/*.local.js
+*.pem
+*.key
+.env
+.env.*

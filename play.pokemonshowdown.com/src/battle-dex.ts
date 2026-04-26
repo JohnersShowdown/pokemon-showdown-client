@@ -236,6 +236,10 @@ export const Dex = new class implements ModdedDex {
 		return `${prefix}//${window.Config ? Config.routes.client : 'play.pokemonshowdown.com'}/`;
 	})();
 
+	fakemonPrefix = (() => {
+		return `https://github.com/JohnersShowdown/sprites/blob/main/`
+	})();
+
 	fxPrefix = (() => {
 		const protocol = (window.document?.location?.protocol !== 'http:') ? 'https:' : '';
 		return `${protocol}//${window.Config ? Config.routes.client : 'play.pokemonshowdown.com'}/fx/`;
@@ -624,6 +628,11 @@ export const Dex = new class implements ModdedDex {
 			facing = 'back';
 		}
 
+		if (species.tags.includes('Fakemon')) {
+			spriteData.url = Dex.fakemonPrefix;
+			return spriteData;
+		}
+
 		// Decide which gen sprites to use.
 		//
 		// There are several different generations we care about here:
@@ -834,6 +843,9 @@ export const Dex = new class implements ModdedDex {
 		let left = (num % 12) * 40;
 		let fainted = ((pokemon as Pokemon | ServerPokemon)?.fainted ?
 			`;opacity:.3;filter:grayscale(100%) brightness(.5)` : ``);
+		if (this.species.get(id).tags.includes('Fakemon')) {
+			return `background:transparent url(${Dex.fakemonPrefix}front/${id}.png) no-repeat scroll -${left}px -${top}px${fainted}`;
+		}
 		return `background:transparent url(${Dex.resourcePrefix}sprites/pokemonicons-sheet.png?v21) no-repeat scroll -${left}px -${top}px${fainted}`;
 	}
 
@@ -875,6 +887,10 @@ export const Dex = new class implements ModdedDex {
 			species.id === "xerneasneutral") && ![
 			"floetteeternal", "pichuspikyeared", "pikachubelle", "pikachucosplay", "pikachulibre", "pikachuphd", "pikachupopstar", "pikachurockstar",
 		].includes(species.id) && !(species.isMega && species.gen === 9);
+		if (species.tags.includes('Fakemon')) {
+			spriteData.spriteDir = 'front';
+			return spriteData;
+		}
 		if (gen >= 8 && homeExists) {
 			spriteData.spriteDir = 'sprites/home-centered';
 			spriteData.x = 8;
@@ -917,6 +933,9 @@ export const Dex = new class implements ModdedDex {
 		const data = this.getTeambuilderSpriteData(pokemon, dex);
 		const shiny = (data.shiny ? '-shiny' : '');
 		const resize = (data.h ? `background-size:${data.h}px` : '');
+		if (data.spriteDir === 'front') {
+			return `background-image:url(${Dex.fakemonPrefix}${data.spriteDir}${shiny}/${data.spriteid}.png);background-position:${data.x + xOffset}px ${data.y + yOffset}px;background-repeat:no-repeat;${resize}`;
+		}
 		return `background-image:url(${Dex.resourcePrefix}${data.spriteDir}${shiny}/${data.spriteid}.png);background-position:${data.x + xOffset}px ${data.y + yOffset}px;background-repeat:no-repeat;${resize}`;
 	}
 
