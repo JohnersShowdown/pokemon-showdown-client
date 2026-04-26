@@ -19,12 +19,12 @@ Config.whitelist = [
 // `defaultserver` specifies the server to use when the domain name in the
 // address bar is `Config.routes.client`.
 Config.defaultserver = {
-	id: 'showdown',
-	host: 'sim3.psim.us',
-	port: 443,
-	httpport: 8000,
-	altport: 80,
-	registered: true
+	id: process.env.SERVER_ID || 'showdown',
+	host: process.env.SERVER_HOST || 'sim3.psim.us',
+	port: parseInt(process.env.SERVER_PORT || '443'),
+	httpport: parseInt(process.env.SERVER_HTTPPORT || '8000'),
+	altport: parseInt(process.env.SERVER_ALTPORT || '80'),
+	registered: process.env.SERVER_REGISTERED !== 'false'
 };
 
 Config.roomsFirstOpenScript = function () {
