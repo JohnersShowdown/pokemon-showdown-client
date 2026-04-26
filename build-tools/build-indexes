@@ -94,10 +94,78 @@ function requireShowdownModule(modulePath) {
 	return require(findShowdownModulePath(modulePath));
 }
 
-const Dex = requireShowdownModule('sim/dex').Dex;
+function localToID(text) {
+	if (text && typeof text === 'object') text = text.id || text.userid || text.name || '';
+	return ('' + (text || '')).toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function getFromDataTable(dex, tableName, id) {
+	const table = dex.data && dex.data[tableName];
+	if (!table) return {};
+	return table[id] || {};
+}
+
+function makeDexGetter(dex, kind) {
+	return {
+		get(name) {
+			const id = localToID(name);
+			switch (kind) {
+			case 'species':
+				if (typeof dex.getSpecies === 'function') return dex.getSpecies(name);
+				if (typeof dex.getTemplate === 'function') return dex.getTemplate(name);
+				return getFromDataTable(dex, 'Pokedex', id);
+			case 'moves':
+				if (typeof dex.getMove === 'function') return dex.getMove(name);
+				return getFromDataTable(dex, 'Moves', id);
+			case 'items':
+				if (typeof dex.getItem === 'function') return dex.getItem(name);
+				return getFromDataTable(dex, 'Items', id);
+			case 'abilities':
+				if (typeof dex.getAbility === 'function') return dex.getAbility(name);
+				return getFromDataTable(dex, 'Abilities', id);
+			}
+			return {};
+		},
+	};
+}
+
+function normalizeDexApi(dex) {
+	if (!dex || dex.__compatNormalized) return dex;
+
+	if (!dex.species || typeof dex.species.get !== 'function') {
+		dex.species = makeDexGetter(dex, 'species');
+	}
+	if (!dex.moves || typeof dex.moves.get !== 'function') {
+		dex.moves = makeDexGetter(dex, 'moves');
+	}
+	if (!dex.items || typeof dex.items.get !== 'function') {
+		dex.items = makeDexGetter(dex, 'items');
+	}
+	if (!dex.abilities || typeof dex.abilities.get !== 'function') {
+		dex.abilities = makeDexGetter(dex, 'abilities');
+	}
+
+	if (typeof dex.mod === 'function' && !dex.mod.__compatWrapped) {
+		const origMod = dex.mod.bind(dex);
+		const wrappedMod = mod => normalizeDexApi(origMod(mod));
+		wrappedMod.__compatWrapped = true;
+		dex.mod = wrappedMod;
+	}
+	if (typeof dex.forGen === 'function' && !dex.forGen.__compatWrapped) {
+		const origForGen = dex.forGen.bind(dex);
+		const wrappedForGen = gen => normalizeDexApi(origForGen(gen));
+		wrappedForGen.__compatWrapped = true;
+		dex.forGen = wrappedForGen;
+	}
+
+	dex.__compatNormalized = true;
+	return dex;
+}
+
+const Dex = normalizeDexApi(requireShowdownModule('sim/dex').Dex);
 const aliasesModule = requireShowdownModule('data/aliases');
 const CompoundWordNames = Array.isArray(aliasesModule.CompoundWordNames) ? aliasesModule.CompoundWordNames : [];
-const toID = Dex.toID;
+const toID = typeof Dex.toID === 'function' ? Dex.toID : localToID;
 process.stdout.write("Loading gen 6 data... ");
 Dex.includeData();
 console.log("DONE");
