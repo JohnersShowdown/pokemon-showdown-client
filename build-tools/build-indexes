@@ -147,15 +147,44 @@ function normalizeDexApi(dex) {
 
 	if (typeof dex.mod === 'function' && !dex.mod.__compatWrapped) {
 		const origMod = dex.mod.bind(dex);
-		const wrappedMod = mod => normalizeDexApi(origMod(mod));
+		const wrappedMod = mod => {
+			let modDex;
+			try {
+				modDex = origMod(mod);
+			} catch {
+				modDex = null;
+			}
+			if (!modDex) {
+				// Private forks may not implement every upstream mod key.
+				return normalizeDexApi(dex);
+			}
+			return normalizeDexApi(modDex);
+		};
 		wrappedMod.__compatWrapped = true;
 		dex.mod = wrappedMod;
 	}
+	if (typeof dex.mod !== 'function') {
+		dex.mod = () => normalizeDexApi(dex);
+		dex.mod.__compatWrapped = true;
+	}
 	if (typeof dex.forGen === 'function' && !dex.forGen.__compatWrapped) {
 		const origForGen = dex.forGen.bind(dex);
-		const wrappedForGen = gen => normalizeDexApi(origForGen(gen));
+		const wrappedForGen = gen => {
+			let genDex;
+			try {
+				genDex = origForGen(gen);
+			} catch {
+				genDex = null;
+			}
+			if (!genDex) return normalizeDexApi(dex);
+			return normalizeDexApi(genDex);
+		};
 		wrappedForGen.__compatWrapped = true;
 		dex.forGen = wrappedForGen;
+	}
+	if (typeof dex.forGen !== 'function') {
+		dex.forGen = () => normalizeDexApi(dex);
+		dex.forGen.__compatWrapped = true;
 	}
 
 	dex.__compatNormalized = true;
