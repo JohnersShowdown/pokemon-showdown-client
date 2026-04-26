@@ -30,8 +30,25 @@ child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown', stdio: 'inh
 child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
 console.log("DONE");
 
-const Dex = require('../caches/pokemon-showdown/dist/sim/dex').Dex;
-const CompoundWordNames = require('../caches/pokemon-showdown/dist/data/aliases').CompoundWordNames;
+function requireShowdownModule(modulePath) {
+	const candidates = [
+		`../caches/pokemon-showdown/dist/${modulePath}`,
+		`../caches/pokemon-showdown/${modulePath}`,
+	];
+	let lastError = null;
+	for (const candidate of candidates) {
+		try {
+			return require(candidate);
+		} catch (e) {
+			lastError = e;
+			if (!(e && e.code === 'MODULE_NOT_FOUND')) throw e;
+		}
+	}
+	throw lastError || new Error(`Unable to load Showdown module: ${modulePath}`);
+}
+
+const Dex = requireShowdownModule('sim/dex').Dex;
+const CompoundWordNames = requireShowdownModule('data/aliases').CompoundWordNames;
 const toID = Dex.toID;
 process.stdout.write("Loading gen 6 data... ");
 Dex.includeData();
@@ -45,8 +62,20 @@ function es3stringify(obj) {
 }
 
 function requireNoCache(pathSpec) {
-	delete require.cache[require.resolve(pathSpec)];
-	return require(pathSpec);
+	const pathSpecs = pathSpec.includes('/caches/pokemon-showdown/dist/') ?
+		[pathSpec, pathSpec.replace('/caches/pokemon-showdown/dist/', '/caches/pokemon-showdown/')] :
+		[pathSpec];
+	let lastError = null;
+	for (const spec of pathSpecs) {
+		try {
+			delete require.cache[require.resolve(spec)];
+			return require(spec);
+		} catch (e) {
+			lastError = e;
+			if (!(e && e.code === 'MODULE_NOT_FOUND')) throw e;
+		}
+	}
+	throw lastError || new Error(`Unable to load module: ${pathSpec}`);
 }
 
 /*********************************************************
