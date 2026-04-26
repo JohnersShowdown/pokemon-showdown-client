@@ -26,12 +26,9 @@ ARG SERVER_REGISTERED=true
 # Bring in the rest of the source
 COPY . .
 
-# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
-RUN node build full
-
-# Generate a browser-compatible config/config.js with baked-in server values.
-# This runs AFTER the main build so it cannot be overwritten.
-# The config-example.js uses process.env which only works in Node, not browsers.
+# Generate a browser-compatible config/config.js with baked-in server values
+# BEFORE the main build, so that the `update` build step can read this file and
+# append Config.routes + version to it (it appends, not replaces).
 RUN SERVER_ID=$SERVER_ID \
     SERVER_HOST=$SERVER_HOST \
     SERVER_PORT=$SERVER_PORT \
@@ -39,6 +36,10 @@ RUN SERVER_ID=$SERVER_ID \
     SERVER_ALTPORT=$SERVER_ALTPORT \
     SERVER_REGISTERED=$SERVER_REGISTERED \
     node build-tools/generate-config.js
+
+# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
+# The `update` step inside will append Config.routes/version to config/config.js.
+RUN node build full
 
 # ---------- Runtime stage ----------
 FROM nginx:1.27-alpine
