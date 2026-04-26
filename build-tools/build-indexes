@@ -159,6 +159,13 @@ function getDexRuleTable(dex, format) {
 	};
 }
 
+function hasDexTag(entry, tagName) {
+	if (!entry || entry.tags == null) return false;
+	if (Array.isArray(entry.tags)) return entry.tags.includes(tagName);
+	if (typeof entry.tags === 'string') return entry.tags === tagName;
+	return false;
+}
+
 function normalizeDexApi(dex) {
 	if (!dex || dex.__compatNormalized) return dex;
 
@@ -594,8 +601,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 				}
 				if (isVGC) {
 					if (species.isNonstandard && species.isNonstandard !== 'Gigantamax') return 'Illegal';
-					if (baseSpecies.tags.includes('Mythical')) return 'Mythical';
-					if (baseSpecies.tags.includes('Restricted Legendary')) return 'Restricted';
+					if (hasDexTag(baseSpecies, 'Mythical')) return 'Mythical';
+					if (hasDexTag(baseSpecies, 'Restricted Legendary')) return 'Restricted';
 					if (species.tier === 'NFE') return 'NFE';
 					if (species.tier === 'LC') return 'LC';
 					return 'Regular';
@@ -622,8 +629,8 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 						return 'Illegal';
 					}
 					if (species.isNonstandard && ['LGPE', 'CAP', 'Future'].includes(species.isNonstandard)) return 'Illegal';
-					return species.tags.includes('Mythical') ? 'Mythical' :
-						species.tags.includes('Restricted Legendary') ? 'Restricted' :
+					return hasDexTag(species, 'Mythical') ? 'Mythical' :
+						hasDexTag(species, 'Restricted Legendary') ? 'Restricted' :
 						species.nfe ? (species.prevo ? 'NFE' : 'LC') : 'Regular';
 				}
 				if (species.tier === 'CAP' || species.tier === 'CAP NFE' || species.tier === 'CAP LC') {
