@@ -20,7 +20,7 @@ Config.whitelist = [
 // address bar is `Config.routes.client`.
 Config.defaultserver = {
 	id: process.env.SERVER_ID || 'showdown',
-	host: process.env.SERVER_HOST || 'sim3.psim.us',
+	host: process.env.SERVER_HOST || 'kyqtcqmrxy8b18ddy1aweewz.15.204.211.28.sslip.io',
 	port: parseInt(process.env.SERVER_PORT || '443'),
 	httpport: parseInt(process.env.SERVER_HTTPPORT || '8000'),
 	altport: parseInt(process.env.SERVER_ALTPORT || '80'),
