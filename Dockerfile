@@ -15,12 +15,27 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
+# Server config build args — override in Coolify / docker build --build-arg
+ARG SERVER_ID=showdown
+ARG SERVER_HOST=sim3.psim.us
+ARG SERVER_PORT=443
+ARG SERVER_HTTPPORT=8000
+ARG SERVER_ALTPORT=80
+ARG SERVER_REGISTERED=true
+
 # Bring in the rest of the source
 COPY . .
 
-# `node build` auto-creates config/config.js from config-example.js if missing,
-# but make it explicit so a misconfigured .dockerignore doesn't silently break.
-RUN if [ ! -f config/config.js ]; then cp config/config-example.js config/config.js; fi
+# Generate a browser-compatible config/config.js with baked-in server values.
+# The config-example.js uses process.env which only works in Node, not browsers,
+# so we produce a static file here from the ARGs above.
+RUN SERVER_ID=$SERVER_ID \
+    SERVER_HOST=$SERVER_HOST \
+    SERVER_PORT=$SERVER_PORT \
+    SERVER_HTTPPORT=$SERVER_HTTPPORT \
+    SERVER_ALTPORT=$SERVER_ALTPORT \
+    SERVER_REGISTERED=$SERVER_REGISTERED \
+    node build-tools/generate-config.js
 
 # Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
 RUN node build full
