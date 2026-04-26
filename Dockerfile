@@ -31,9 +31,12 @@ ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 # Bring in the rest of the source
 COPY . .
 
-# Generate a browser-compatible config/config.js with baked-in server values
-# BEFORE the main build, so that the `update` build step can read this file and
-# append Config.routes + version to it (it appends, not replaces).
+# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
+# The `update` step inside will append Config.routes/version to config/config.js.
+RUN node build full
+
+# Generate browser config + optional testclient key AFTER build full so they are
+# guaranteed to be present in the final image artifacts.
 RUN SERVER_ID=$SERVER_ID \
     SERVER_HOST=$SERVER_HOST \
     SERVER_PORT=$SERVER_PORT \
@@ -43,19 +46,14 @@ RUN SERVER_ID=$SERVER_ID \
     TESTCLIENT_KEY=$TESTCLIENT_KEY \
     node build-tools/generate-config.js
 
-# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
-# The `update` step inside will append Config.routes/version to config/config.js.
-RUN node build full
-
 # ---------- Runtime stage ----------
 FROM nginx:1.27-alpine
 
 # Static doc root: the play subdomain, with testclient.html as index
 COPY --from=builder /app/play.pokemonshowdown.com/ /usr/share/nginx/html/
 
-# testclient.html references ../config/testclient-key.js (one level above doc
-# root). That file is optional (logged-in test sessions only) and intentionally
-# 404s in production — no action needed.
+# testclient key is generated into /config/testclient-key.js when TESTCLIENT_KEY
+# is provided as a build arg.
 
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
