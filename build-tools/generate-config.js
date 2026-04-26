@@ -26,20 +26,22 @@ var Config = Config || {};
 Config.bannedHosts = ['cool.jit.su', 'pokeball-nixonserver.rhcloud.com'];
 
 Config.whitelist = [
-\t'wikipedia.org'
+	'wikipedia.org'
 ];
 
 Config.defaultserver = {
-\tid: ${JSON.stringify(id)},
-\thost: ${JSON.stringify(host)},
-\tport: ${port},
-\thttpport: ${httpport},
-\taltport: ${altport},
-\tregistered: ${registered}
+	id: ${JSON.stringify(id)},
+	host: ${JSON.stringify(host)},
+	port: ${port},
+	httpport: ${httpport},
+	altport: ${altport},
+	registered: ${registered}
 };
 
 Config.roomsFirstOpenScript = function () {
 };
+
+Config.customcolors = {};
 `;
 
 const root = path.resolve(__dirname, '..');
