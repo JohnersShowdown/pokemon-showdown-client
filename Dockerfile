@@ -16,12 +16,16 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 # Server config build args — override in Coolify / docker build --build-arg
+ARG GITHUB_TOKEN
 ARG SERVER_ID=showdown
 ARG SERVER_HOST=sim3.psim.us
 ARG SERVER_PORT=443
 ARG SERVER_HTTPPORT=8000
 ARG SERVER_ALTPORT=80
 ARG SERVER_REGISTERED=true
+
+# build-tools/build-indexes expects GITHUB_TOKEN in process.env
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 
 # Bring in the rest of the source
 COPY . .
