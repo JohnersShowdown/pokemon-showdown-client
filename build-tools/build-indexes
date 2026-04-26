@@ -1751,9 +1751,10 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 
 {
 	const textData = Dex.loadTextData();
-	const Text = textData.Default;
+	const Text = textData.Default || {};
 
 	function assignData(id, entry) {
+		if (!entry) return;
 		for (const key in entry) {
 			if (['name', 'desc', 'shortDesc'].includes(key)) continue;
 			const textEntry = Text[id] || (Text[id] = {});
@@ -1768,9 +1769,9 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 		}
 	}
 
-	for (const id in textData.Moves) assignData(id, textData.Moves[id]);
-	for (const id in textData.Abilities) assignData(id, textData.Abilities[id]);
-	for (const id in textData.Items) assignData(id, textData.Items[id]);
+	for (const id in (textData.Moves || {})) assignData(id, textData.Moves[id]);
+	for (const id in (textData.Abilities || {})) assignData(id, textData.Abilities[id]);
+	for (const id in (textData.Items || {})) assignData(id, textData.Items[id]);
 
 	const buf = 'exports.BattleText = ' + es3stringify(Text) + ';';
 	fs.writeFileSync('play.pokemonshowdown.com/data/text.js', buf);
