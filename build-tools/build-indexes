@@ -14,14 +14,15 @@ if (!fs.existsSync('caches/pokemon-showdown')) {
 		throw new Error('GITHUB_TOKEN environment variable is not set. Please set it to clone the private repository.');
 	}
 	const repoUrl = `https://${token}@github.com/JohnersShowdown/johnpauls-showdown.git`;
-	child_process.execSync(`git clone ${repoUrl}`, {
+	child_process.execFileSync('git', ['clone', repoUrl], {
 		cwd: 'caches',
+		stdio: 'inherit'
 	});
 }
 
 process.stdout.write("Syncing data from Git repository... ");
-child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown' });
-child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown' });
+child_process.execFileSync('git', ['pull'], { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
+child_process.execFileSync('npm', ['run', 'build'], { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
 console.log("DONE");
 
 const Dex = require('../caches/pokemon-showdown/dist/sim/dex').Dex;
