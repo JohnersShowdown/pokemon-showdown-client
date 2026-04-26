@@ -19,7 +19,7 @@ if (!fs.existsSync('caches/pokemon-showdown')) {
 		throw new Error('GITHUB_TOKEN environment variable is not set. Please set it to clone the private repository.');
 	}
 	const repoUrl = `https://${token}@github.com/JohnersShowdown/johnpauls-showdown.git`;
-	child_process.execSync(`git clone ${repoUrl}`, {
+	child_process.execSync(`git clone ${repoUrl} pokemon-showdown`, {
 		cwd: 'caches',
 		stdio: 'inherit'
 	});
