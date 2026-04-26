@@ -30,21 +30,50 @@ child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown', stdio: 'inh
 child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
 console.log("DONE");
 
-function requireShowdownModule(modulePath) {
-	const candidates = [
-		`../caches/pokemon-showdown/dist/${modulePath}`,
-		`../caches/pokemon-showdown/${modulePath}`,
+const SHOWDOWN_ROOT = path.resolve(__dirname, '../caches/pokemon-showdown');
+
+function findShowdownModulePath(modulePath) {
+	const directCandidates = [
+		path.join(SHOWDOWN_ROOT, 'dist', modulePath),
+		path.join(SHOWDOWN_ROOT, modulePath),
+		path.join(SHOWDOWN_ROOT, 'server', modulePath),
+		path.join(SHOWDOWN_ROOT, 'dist', 'server', modulePath),
 	];
-	let lastError = null;
-	for (const candidate of candidates) {
+	for (const candidate of directCandidates) {
 		try {
-			return require(candidate);
-		} catch (e) {
-			lastError = e;
-			if (!(e && e.code === 'MODULE_NOT_FOUND')) throw e;
+			require.resolve(candidate);
+			return candidate;
+		} catch {}
+	}
+
+	const fileName = `${path.basename(modulePath)}.js`;
+	const moduleDir = path.dirname(modulePath).replace(/\\/g, '/');
+	const stack = [SHOWDOWN_ROOT];
+	let fallback = null;
+	while (stack.length) {
+		const cur = stack.pop();
+		for (const entry of fs.readdirSync(cur, {withFileTypes: true})) {
+			if (entry.isDirectory()) {
+				if (entry.name === '.git' || entry.name === 'node_modules') continue;
+				stack.push(path.join(cur, entry.name));
+				continue;
+			}
+			if (!entry.isFile() || entry.name !== fileName) continue;
+			const fullPath = path.join(cur, entry.name);
+			const normalized = fullPath.replace(/\\/g, '/');
+			if (normalized.endsWith(`/${modulePath}.js`) || normalized.includes(`/${moduleDir}/`)) {
+				return fullPath;
+			}
+			if (!fallback) fallback = fullPath;
 		}
 	}
-	throw lastError || new Error(`Unable to load Showdown module: ${modulePath}`);
+
+	if (fallback) return fallback;
+	throw new Error(`Unable to locate Showdown module file for ${modulePath}`);
+}
+
+function requireShowdownModule(modulePath) {
+	return require(findShowdownModulePath(modulePath));
 }
 
 const Dex = requireShowdownModule('sim/dex').Dex;
@@ -65,6 +94,11 @@ function requireNoCache(pathSpec) {
 	const pathSpecs = pathSpec.includes('/caches/pokemon-showdown/dist/') ?
 		[pathSpec, pathSpec.replace('/caches/pokemon-showdown/dist/', '/caches/pokemon-showdown/')] :
 		[pathSpec];
+	const showdownModuleMatch = pathSpec.match(/\/caches\/pokemon-showdown\/(?:dist\/)?(.+)$/);
+	if (showdownModuleMatch) {
+		const modulePath = showdownModuleMatch[1].replace(/\.js$/, '');
+		pathSpecs.push(findShowdownModulePath(modulePath));
+	}
 	let lastError = null;
 	for (const spec of pathSpecs) {
 		try {
