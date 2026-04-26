@@ -95,7 +95,8 @@ function requireShowdownModule(modulePath) {
 }
 
 const Dex = requireShowdownModule('sim/dex').Dex;
-const CompoundWordNames = requireShowdownModule('data/aliases').CompoundWordNames;
+const aliasesModule = requireShowdownModule('data/aliases');
+const CompoundWordNames = Array.isArray(aliasesModule.CompoundWordNames) ? aliasesModule.CompoundWordNames : [];
 const toID = Dex.toID;
 process.stdout.write("Loading gen 6 data... ");
 Dex.includeData();
