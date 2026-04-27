@@ -237,7 +237,7 @@ export const Dex = new class implements ModdedDex {
 	})();
 
 	fakemonPrefix = (() => {
-		return `https://github.com/JohnersShowdown/sprites/blob/main/`
+		return `https://raw.githubusercontent.com/JohnersShowdown/sprites/main/`;
 	})();
 
 	fxPrefix = (() => {
