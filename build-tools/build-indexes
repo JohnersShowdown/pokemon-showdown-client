@@ -1190,6 +1190,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		}
 	}
 	const G2Learnsets = Dex.mod('gen2').data.Learnsets;
+	const warnedGen2OnlyLearnsets = new Set();
 	for (const id in G2Learnsets) {
 		const learnset = G2Learnsets[id].learnset;
 		if (!learnset) continue;
@@ -1197,7 +1198,11 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			const gens = learnset[moveid].map(x => Number(x[0]));
 			const minGen = Math.min(...gens);
 			if (!learnsets[id]) {
-				throw new Error(`${id} has a Gen 2 learnset but not a modern learnset`);
+				if (!warnedGen2OnlyLearnsets.has(id)) {
+					console.warn(`[build-indexes] skipping Gen 2-only learnset entry: ${id}`);
+					warnedGen2OnlyLearnsets.add(id);
+				}
+				continue;
 			}
 			if (!learnsets[id][moveid]) learnsets[id][moveid] = '';
 			if (minGen === 2) learnsets[id][moveid] = '2' + learnsets[id][moveid];
