@@ -630,6 +630,10 @@ export const Dex = new class implements ModdedDex {
 
 		if (species.tags.includes('Fakemon')) {
 			spriteData.url = Dex.fakemonPrefix;
+			if (isFront) dir = `front${options.shiny ? '-shiny' : ''}`;
+			else dir = `back${options.shiny ? '-shiny' : ''}`;
+
+			spriteData.url += `${dir}/${name}.png`;
 			return spriteData;
 		}
 
