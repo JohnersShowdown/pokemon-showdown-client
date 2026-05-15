@@ -848,7 +848,7 @@ export const Dex = new class implements ModdedDex {
 		let fainted = ((pokemon as Pokemon | ServerPokemon)?.fainted ?
 			`;opacity:.3;filter:grayscale(100%) brightness(.5)` : ``);
 		if (this.species.get(id).tags.includes('Fakemon')) {
-			return `background:transparent url(${Dex.fakemonPrefix}front/${id}.png) no-repeat scroll -${left}px -${top}px${fainted}; width 40px; height 40px;`;
+			return `background:transparent url(${Dex.fakemonPrefix}menu/${id}.png) no-repeat scroll -${left}px -${top}px${fainted}`;
 		}
 		return `background:transparent url(${Dex.resourcePrefix}sprites/pokemonicons-sheet.png?v21) no-repeat scroll -${left}px -${top}px${fainted}`;
 	}
