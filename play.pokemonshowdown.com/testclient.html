@@ -12,6 +12,11 @@
 		<link rel="stylesheet" href="style/font-awesome.css" />
 		<meta name="robots" content="noindex" />
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+		<!-- the "preconnect" one below is optional, but recommended for optimizing loading -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap">
+
 		<script src="config/config.generated.js"></script>
 		<script>
 			function loadRemoteData(src) {
@@ -130,10 +135,30 @@
 		<script src="data/aliases.js" async="async" onerror="loadRemoteData(this.src)"></script>
 		<script src="data/commands.js" async="async" onerror="loadRemoteData(this.src)"></script>
 
+		<!-- example of what your index.html may contain inside the <body> -->
+		<script src="data/search-index.js" onerror="loadRemoteData(this.src)"></script>
+		<script src="data/teambuilder-tables.js" onerror="loadRemoteData(this.src)"></script>
+		<script src="js/battle-dex-search.js"></script>
+		<script src="js/search.js"></script>
+		<script src="data/aliases.js" async="async" onerror="loadRemoteData(this.src)"></script>
+
+		<!-- plop this in AFTER all of the <script> tags !! -->
+		<script src="/showdex/main.js"></script>
+
+		<!-- use this instead of the <script src="/showdex/main.js"> one above -->
 		<script>
-			window.onload = () => {
-				window.app = new App();
-			}
+  			window.onload = () => {
+    			// manually instantiate the Showdown client `App` in case it wasn't already
+    			// (which we'll know based on whether the `app` window global exists)
+    			if (!window.app) {
+      				window.app = new App();
+    			}
+
+    			const script = document.createElement('script');
+
+    			script.src = '/showdex/main.js';
+    			document.body.appendChild(script);
+  			};
 		</script>
 
 	</body>
