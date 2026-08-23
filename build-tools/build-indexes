@@ -2,6 +2,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const path = require('node:path');
 const child_process = require('node:child_process');
 
 process.chdir(__dirname + '/..');
@@ -11,8 +12,9 @@ if (!fs.existsSync('caches/pokemon-showdown')) {
 	if (!token) {
 		throw new Error('GITHUB_TOKEN environment variable is not set. Please set it to clone the private repository.');
 	}
+	fs.mkdirSync('caches', {recursive: true});
 	const repoUrl = `https://${token}@github.com/JohnersShowdown/john-showdown.git`;
-	child_process.execSync(`git clone ${repoUrl} pokemon-showdown`, {
+	child_process.execFileSync('git', ['clone', repoUrl, 'pokemon-showdown'], {
 		cwd: 'caches',
 		stdio: 'inherit'
 	});
