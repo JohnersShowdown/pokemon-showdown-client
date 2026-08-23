@@ -195,7 +195,7 @@ function getCachebuster(url, sourceDir) {
 	const isMinidex = filename?.endsWith('/pokedex-mini.js') || filename?.endsWith('/pokedex-mini-bw.js');
 	if (process.argv[2] === 'full' && !isMinidex) {
 		console.error(`WARNING: Could not cachebust ${url} in ${sourceDir}; using random fallback.`);
-		process.exitCode = 2;
+		if (!process.env.ALLOW_MISSING_CACHEBUSTERS) process.exitCode = 2;
 	}
 	return `${Math.random()}`.slice(2, 10);
 }

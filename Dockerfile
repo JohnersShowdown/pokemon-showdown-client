@@ -31,9 +31,11 @@ ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 # Bring in the rest of the source
 COPY . .
 
-# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing
+# Full build: indexes, learnsets, minidex, then TS/Babel compile + asset hashing.
+# A clean Git clone omits generated/large assets; update warns and uses random
+# cachebusters for those references, which is acceptable in this static image.
 # The `update` step inside will append Config.routes/version to config/config.js.
-RUN node build full
+RUN ALLOW_MISSING_CACHEBUSTERS=1 node build full
 
 # Generate browser config + optional testclient key AFTER build full so they are
 # guaranteed to be present in the final image artifacts.
