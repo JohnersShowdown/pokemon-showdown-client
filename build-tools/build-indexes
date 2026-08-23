@@ -22,6 +22,12 @@ if (!fs.existsSync('caches/pokemon-showdown')) {
 
 process.stdout.write("Syncing data from Git repository... ");
 child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
+// Private forks occasionally update package.json without regenerating the lockfile.
+// Reconcile it in this disposable build cache so the server build's npm ci can run.
+child_process.execSync('npm install --package-lock-only --ignore-scripts --no-audit --no-fund', {
+	cwd: 'caches/pokemon-showdown',
+	stdio: 'inherit',
+});
 child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown', stdio: 'inherit' });
 console.log("DONE");
 
