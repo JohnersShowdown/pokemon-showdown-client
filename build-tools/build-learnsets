@@ -11,77 +11,14 @@
 
 "use strict";
 
-const path = require('path');
-const fs = require('fs');
+import fs from 'node:fs';
 
-const thisFile = __filename;
-const thisDir = __dirname;
-const rootDir = path.resolve(thisDir, '../play.pokemonshowdown.com');
-const SHOWDOWN_ROOT = path.resolve(thisDir, '../caches/pokemon-showdown');
+import dexModule from '../caches/pokemon-showdown/dist/sim/dex.js';
 
-function findShowdownModulePath(modulePath) {
-	const directCandidates = [
-		path.join(SHOWDOWN_ROOT, 'dist', modulePath),
-		path.join(SHOWDOWN_ROOT, modulePath),
-		path.join(SHOWDOWN_ROOT, 'server', modulePath),
-		path.join(SHOWDOWN_ROOT, 'dist', 'server', modulePath),
-	];
-	for (const candidate of directCandidates) {
-		try {
-			require.resolve(candidate);
-			return candidate;
-		} catch {}
-	}
+process.chdir(import.meta.dirname + '/..');
 
-	const fileName = `${path.basename(modulePath)}.js`;
-	const moduleDir = path.dirname(modulePath).replace(/\\/g, '/');
-	const stack = [SHOWDOWN_ROOT];
-	const matches = [];
-	while (stack.length) {
-		const cur = stack.pop();
-		for (const entry of fs.readdirSync(cur, {withFileTypes: true})) {
-			if (entry.isDirectory()) {
-				if (['.git', 'node_modules', 'test', 'tests'].includes(entry.name)) continue;
-				stack.push(path.join(cur, entry.name));
-				continue;
-			}
-			if (!entry.isFile() || entry.name !== fileName) continue;
-			const fullPath = path.join(cur, entry.name);
-			const relative = path.relative(SHOWDOWN_ROOT, fullPath).replace(/\\/g, '/');
-			if (relative.includes('/test/') || relative.startsWith('test/')) continue;
-
-			if (relative === `${modulePath}.js`) {
-				matches.push({score: 0, fullPath});
-				continue;
-			}
-			if (relative === `dist/${modulePath}.js` || relative === `server/${modulePath}.js` || relative === `dist/server/${modulePath}.js`) {
-				matches.push({score: 1, fullPath});
-				continue;
-			}
-			if (relative.endsWith(`/${modulePath}.js`)) {
-				matches.push({score: 2, fullPath});
-				continue;
-			}
-			if (relative.includes(`/${moduleDir}/`)) {
-				matches.push({score: 3, fullPath});
-				continue;
-			}
-			matches.push({score: 9, fullPath});
-		}
-	}
-
-	if (matches.length) {
-		matches.sort((a, b) => a.score - b.score || a.fullPath.length - b.fullPath.length);
-		return matches[0].fullPath;
-	}
-	throw new Error(`Unable to locate Showdown module file for ${modulePath}`);
-}
-
-function requireShowdownModule(modulePath) {
-	return require(findShowdownModulePath(modulePath));
-}
-
-const Dex = requireShowdownModule('sim/dex').Dex;
+const thisFile = 'build-tools/build-learnsets';
+const { Dex } = dexModule;
 const toID = Dex.toID;
 
 function updateLearnsets(callback) {
@@ -138,14 +75,14 @@ function updateLearnsets(callback) {
 		buf.push(speciesid + ':{learnset:' + lsetSerialized + '}');
 	}
 
-	const writeStream = fs.createWriteStream(path.join(rootDir, 'data', 'learnsets-g6.js')).on('error', callback);
+	const writeStream = fs.createWriteStream('play.pokemonshowdown.com/data/learnsets-g6.js').on('error', callback);
 	writeStream.write('exports.BattleLearnsets = {\n\t' + buf.join(',\n\t') + '\n};\n');
 	writeStream.end(callback);
 }
 
 let indexStats, updateStats, indexMTime, updateMTime;
 try {
-	indexStats = fs.statSync(path.join(rootDir, 'index.html'));
+	indexStats = fs.statSync('play.pokemonshowdown.com/index.html');
 	indexMTime = indexStats.mtime.getTime();
 } catch (err) {
 	if (err.code !== 'ENOENT') throw err;
@@ -165,7 +102,7 @@ let learnsetsG6Stats;
 let learnsetsG6ToUpdate = true;
 
 try {
-	learnsetsStats = fs.statSync(path.join(rootDir, 'data', 'learnsets.js'));
+	learnsetsStats = fs.statSync('play.pokemonshowdown.com/data/learnsets.js');
 } catch {
 	// Couldn't find learnsets.js, but that's not the end of the world: skip to next task.
 	console.error("Couldn't find `data/learnsets.js`. Task aborted.");
@@ -173,7 +110,7 @@ try {
 }
 if (learnsetsG6ToUpdate) {
 	try {
-		learnsetsG6Stats = fs.statSync(path.join(rootDir, 'data', 'learnsets-g6.js'));
+		learnsetsG6Stats = fs.statSync('play.pokemonshowdown.com/data/learnsets-g6.js');
 	} catch (err) {
 		if (err.code === 'ENOENT') {
 			// It doesn't exist currently, but it will by the end of the script execution.
