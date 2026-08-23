@@ -668,7 +668,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 					'aaa', 'bh', 'doubles', // natdex abbreviations
 					'tiershift', 'linked', 'pokebilitiesaaa',
 				])) {
-					const format = Dex.formats.get(`${gen}${isNatDex ? 'nationaldex' : ''}${meta}`);
+					const format = getDexFormat(Dex, `${gen}${isNatDex ? 'nationaldex' : isChampions ? 'champions' : ''}${meta}`);
 					if (!format.exists) continue;
 					const ruleTable = getDexRuleTable(Dex, format);
 					let banned = ruleTable.isBannedSpecies(species);
@@ -1725,30 +1725,20 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
  *********************************************************/
 
 {
-	const textData = Dex.loadTextData();
-	const Text = textData.Default;
+	const LANGS = fs.readdirSync('caches/pokemon-showdown/data/text', { withFileTypes: true })
+		.filter(entry => entry.isDirectory())
+		.map(entry => entry.name)
+		.concat('en');
 
-	function assignData(id, entry) {
-		for (const key in entry) {
-			if (['name', 'desc', 'shortDesc'].includes(key)) continue;
-			const textEntry = Text[id] || (Text[id] = {});
-			if (key.startsWith('gen')) {
-				for (const modKey in entry[key]) {
-					if (['desc', 'shortDesc'].includes(key)) continue;
-					textEntry[modKey + 'Gen' + key.charAt(3)] = entry[key][modKey];
-				}
-			} else {
-				textEntry[key] = entry[key];
-			}
-		}
+	fs.mkdirSync('play.pokemonshowdown.com/data/text', { recursive: true });
+	for (const lang of LANGS) {
+		const translation = Dex.loadTextData(lang);
+		fs.writeFileSync(
+			`play.pokemonshowdown.com/data/text/${lang}.js`,
+			'exports.BattleText = exports.BattleText || {};\n' +
+			`exports.BattleText[${JSON.stringify(lang)}] = ` + es3stringify(translation) + ';'
+		);
 	}
-
-	for (const id in textData.Moves) assignData(id, textData.Moves[id]);
-	for (const id in textData.Abilities) assignData(id, textData.Abilities[id]);
-	for (const id in textData.Items) assignData(id, textData.Items[id]);
-
-	const buf = 'exports.BattleText = ' + es3stringify(Text) + ';';
-	fs.writeFileSync('play.pokemonshowdown.com/data/text.js', buf);
 }
 
 console.log("DONE");
