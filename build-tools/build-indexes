@@ -7,6 +7,9 @@ const child_process = require('node:child_process');
 
 process.chdir(__dirname + '/..');
 
+// Generated client data is gitignored and is therefore absent in fresh clones.
+fs.mkdirSync('play.pokemonshowdown.com/data', {recursive: true});
+
 if (!fs.existsSync('caches/pokemon-showdown')) {
 	const token = process.env.GITHUB_TOKEN;
 	if (!token) {
