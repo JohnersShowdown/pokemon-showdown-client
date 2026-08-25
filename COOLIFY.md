@@ -52,19 +52,13 @@ The build clones it over HTTPS unauthenticated. To use a token:
 Pointing at your Showdown server
 --------------------------------
 
-`testclient.html` currently loads server defaults from
-`https://play.pokemonshowdown.com/config/config.js` (hardcoded on line 15) and
-accepts a `?~~host:port` query param to override at runtime.
+`testclient-new.html` loads `config/config.generated.js`, which is generated at
+build time from the `SERVER_ID`, `SERVER_HOST`, `SERVER_PORT`,
+`SERVER_HTTPPORT`, `SERVER_ALTPORT`, and `SERVER_REGISTERED` Docker build args.
+Set those as build-time variables in Coolify and redeploy the application.
 
-For a permanent override, edit `play.pokemonshowdown.com/testclient.html` to
-either:
-
-- replace the external `config.js` `<script src=...>` with a local
-  `config/config.js`, or
-- hardcode `Config.server = { id, host, port }` after the existing IIFE that
-  parses `location.search`.
-
-Either edit lands in the build context and is baked into the image.
+The `?~~host:port` query parameter remains available as a temporary runtime
+override.
 
 Things intentionally not included
 ---------------------------------
