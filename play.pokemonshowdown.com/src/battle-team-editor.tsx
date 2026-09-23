@@ -2059,10 +2059,16 @@ class TeamEditorForm extends preact.Component<{
 		}
 	}
 	getSetScrollParent(elem: HTMLElement) {
-		for (let parent = elem.parentElement; parent; parent = parent.parentElement) {
+		let parent: HTMLElement | null = elem.parentElement;
+		while (parent) {
 			const style = getComputedStyle(parent);
-			if (!/(auto|scroll)/.test(style.overflowY)) continue;
-			if (parent.scrollHeight <= parent.clientHeight) continue;
+			if (!/(auto|scroll)/.test(style.overflowY)) {
+				parent = parent.parentElement;
+				continue;
+			}
+			if (parent.scrollHeight <= parent.clientHeight) {
+				parent = parent.parentElement;
+				continue;
 			return parent;
 		}
 		return null;
@@ -2746,10 +2752,17 @@ class TeamEditorForm extends preact.Component<{
 		}
 	}
 	getScrollParent(elem: HTMLElement) {
-		for (let parent = elem.parentElement; parent; parent = parent.parentElement) {
+		let parent: HTMLElement | null = elem.parentElement;
+		while (parent) {
 			const style = getComputedStyle(parent);
-			if (!/(auto|scroll)/.test(style.overflowY)) continue;
-			if (parent.scrollHeight <= parent.clientHeight) continue;
+			if (!/(auto|scroll)/.test(style.overflowY)) {
+				parent = parent.parentElement;
+				continue;
+			}
+			if (parent.scrollHeight <= parent.clientHeight) {
+				parent = parent.parentElement;
+				continue;
+			}
 			return parent;
 		}
 		return null;
