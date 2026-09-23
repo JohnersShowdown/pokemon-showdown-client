@@ -2069,6 +2069,7 @@ class TeamEditorForm extends preact.Component<{
 			if (parent.scrollHeight <= parent.clientHeight) {
 				parent = parent.parentElement;
 				continue;
+			}
 			return parent;
 		}
 		return null;
